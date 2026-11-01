@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Message Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+    <div class="logo">MM</div>
+    <div class="brand-info">
+        <h1>Message Manager</h1>
+        <p>Live Telegram inbox · Local priority rules</p>
+    </div>
+    <div class="header-actions">
+        <a class="header-link" href="{{ url_for('ai_demo') }}">Gemini AI demo</a>
+        <span class="live-pill">LIVE INBOX</span>
+    </div>
+</header>
+
+{% if error %}
+<main class="layout single-column">
+    <section class="conversation empty-state">
+        <h2>Telegram connection error</h2>
+        <p>{{ error }}</p>
+        <p>Check the terminal for details and confirm your .env and Telegram session are available.</p>
+        <button onclick="window.location.reload()">Retry connection</button>
+    </section>
+</main>
+{% elif not chats or not selected %}
+<main class="layout single-column">
+    <section class="conversation empty-state">
+        <h2>No conversations found</h2>
+        <p>Your Telegram inbox is empty or couldn't be loaded.</p>
+        <button onclick="window.location.reload()">Refresh inbox</button>
+    </section>
+</main>
+{% else %}
+<main class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-title"><h2>Inbox</h2><span>{{ chats|length }}</span></div>
+        <div class="chat-list">
+            {% for chat in chats %}
+            <a href="{{ url_for('home', chat=chat.id) }}" class="chat-item {% if selected.id == chat.id %}active{% endif %}">
+                <div class="avatar">{{ chat.name[0] if chat.name else '?' }}</div>
+                <div class="chat-info">
+                    <div class="name-row">
+                        <strong>{{ chat.name }}</strong>
+                        <span class="priority {{ chat.priority|lower }}">{{ chat.priority }}</span>
+                    </div>
+                    <div class="category">{{ chat.category }}{% if chat.unread_count %} · {{ chat.unread_count }} unread{% endif %}</div>
+                    <p class="last-message">{{ chat.last_message or 'No text message' }}</p>
+                    <small class="score-text">Rule score: {{ chat.priority_score }}/100</small>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <section class="conversation">
+        <div class="conversation-header">
+            <div class="person">
+                <div class="avatar large">{{ selected.name[0] if selected.name else '?' }}</div>
+                <div class="person-info"><h2>{{ selected.name }}</h2><p>Telegram conversation</p></div>
+            </div>
+            <div class="priority-card">
+                <span>Priority (local rules)</span>
+                <strong class="priority {{ selected.priority|lower }}">{{ selected.priority }}</strong>
+                <small>Score: {{ selected.priority_score }}/100</small>
+                <small>{{ selected.category }}</small>
+            </div>
+        </div>
+
+        {% for category, notice in notices %}
+        <div class="notice {{ category }}" role="status">{{ notice }}</div>
+        {% endfor %}
+
+        <div class="priority-reason"><strong>Reason</strong><span>{{ selected.priority_reason }}</span></div>
+
+        <div class="messages" id="messages">
+            {% for message in messages %}
+            <div class="message-row {{ message.sender }}">
+                <div class="bubble">
+                    <span class="sender">{% if message.sender == 'owner' %}You{% else %}{{ selected.name }}{% endif %}{% if message.date %} · {{ message.date }}{% endif %}</span>
+                    <p>{{ message.text }}</p>
+                </div>
+            </div>
+            {% else %}
+            <p class="empty-messages">No messages found in this conversation.</p>
+            {% endfor %}
+        </div>
+
+        <form class="reply-form" method="POST" action="{{ url_for('home', chat=selected.id) }}">
+            <input type="hidden" name="chat_id" value="{{ selected.id }}">
+            <textarea name="reply" rows="2" placeholder="Write your Telegram reply..." aria-label="Write your Telegram reply" required></textarea>
+            <div class="reply-footer"><small>Replies are sent to the selected Telegram chat.</small><button type="submit">Send Reply ➤</button></div>
+        </form>
+    </section>
+</main>
+{% endif %}
+
+<script>
+    const messages = document.getElementById("messages");
+    if (messages) messages.scrollTop = messages.scrollHeight;
+
+    const replyBox = document.querySelector('textarea[name="reply"]');
+    setInterval(() => {
+        if (document.visibilityState !== "visible") return;
+        if (replyBox && (replyBox.value.trim() || document.activeElement === replyBox)) return;
+        window.location.reload();
+    }, 15000);
+</script>
+</body>
+</html>

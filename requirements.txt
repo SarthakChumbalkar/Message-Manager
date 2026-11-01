@@ -1,0 +1,4 @@
+Flask
+Telethon
+python-dotenv
+google-genai

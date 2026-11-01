@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini AI Demo | Message Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+    <div class="logo">MM</div>
+    <div class="brand-info"><h1>Gemini AI Demo</h1><p>Sample-message analysis</p></div>
+    <div class="header-actions"><a class="header-link" href="{{ url_for('home') }}">← Back to inbox</a></div>
+</header>
+
+<main class="ai-container">
+    <section class="panel">
+        <h2>Analyze a sample message</h2>
+        <p>Gemini returns a priority, score, category, explanation, and suggested reply.</p>
+        <form method="POST" action="{{ url_for('ai_demo') }}">
+            <label for="sample">Choose a synthetic example</label>
+            <select id="sample" name="sample">
+                {% for key, sample in samples.items() %}
+                <option value="{{ key }}" {% if selected_sample == key %}selected{% endif %}>{{ sample.label }}</option>
+                {% endfor %}
+            </select>
+            <div class="sample-box">{{ samples[selected_sample].message }}</div>
+            <button type="submit">Analyze with Gemini</button>
+        </form>
+        <p class="muted">Demo only: these invented messages are sent to Gemini. Live Telegram messages are not sent to the AI service in this version.</p>
+    </section>
+
+    {% if error %}<div class="notice error">{{ error }}</div>{% endif %}
+
+    {% if result %}
+    <section class="panel">
+        <h2>Analysis result</h2>
+        <div class="result-grid">
+            <div class="result-item"><h3>Priority</h3><span class="priority {{ result.priority|lower }}">{{ result.priority }}</span></div>
+            <div class="result-item"><h3>Score</h3><p><strong>{{ result.score }}/100</strong></p></div>
+            <div class="result-item"><h3>Category</h3><p>{{ result.category }}</p></div>
+            <div class="result-item"><h3>Reason</h3><p>{{ result.reason }}</p></div>
+            <div class="result-item reply-draft"><h3>Suggested reply</h3><p>{{ result.suggested_reply }}</p></div>
+        </div>
+    </section>
+    {% endif %}
+</main>
+</body>
+</html>
