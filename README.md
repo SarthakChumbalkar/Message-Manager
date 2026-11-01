@@ -1,4 +1,4 @@
-# Message Manager — Mini Project
+# Message Manager - Mini Project
 
 A Flask dashboard that fetches Telegram conversations using Telethon, displays message history, sends replies, periodically refreshes the inbox, and applies transparent local keyword rules to order conversations. A separate Gemini AI demo analyzes synthetic sample messages.
 
